@@ -1,156 +1,207 @@
-import React,{useState} from "react";
-import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useRef, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  SafeAreaView,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import LottieView from "lottie-react-native";
+
 const Home = (props) => {
-    const [image, setImage] = useState(null);
-    const [product, setProduct] = useState([]);
-  
-    const pickImage = async () => {
-      // No permissions request is necessary for launching the image library
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-  
-      console.log(result);
-  
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-          // ImagePicker saves the taken photo to disk and returns a local URI to it
-        let localUri = result.assets[0].uri;
-        let filename = localUri.split('/').pop();
-      
-        // Infer the type of the image
-        let match = /\.(\w+)$/.exec(filename);
-        let type = match ? `image/${match[1]}` : `image`;
-      
-        // Upload the image using the fetch and FormData APIs
-        let formData = new FormData();
-        // Assume "photo" is the name of the form field the server expects
-        formData.append('photo', { uri: localUri, name: filename, type });
-        const response =  await fetch("http://localhost:8000/predict", {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'content-type': 'multipart/form-data',
-        },
-      });
-      console.log(response)
-      }
-    };
-    const getData = async () => {
-      try {
-        const ourData = await axios.post("http://localhost:8000/predict")
-        console.log(ourData.data.products[0])
-        setProduct(ourData.data.products)
-      } catch(error){
-        console.log(error)
-      }
-    }
+  const [image, setImage] = useState(null);
+  const [product, setProduct] = useState([]);
+  const [loader, showLoader] = useState(false);
+  const animation = useRef(null);
 
-    async function takeAndUploadPhotoAsync() {
-      // Display the camera to the user and wait for them to take a photo or to cancel
-      // the action
-      let result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-      });
-    
-      if (result.cancelled) {
-        return;
-      }
-    
-      // ImagePicker saves the taken photo to disk and returns a local URI to it
-      let localUri = result.uri;
-      let filename = localUri.split('/').pop();
-    
-      // Infer the type of the image
-      let match = /\.(\w+)$/.exec(filename);
-      let type = match ? `image/${match[1]}` : `image`;
-    
-      // Upload the image using the fetch and FormData APIs
-      let formData = new FormData();
-      // Assume "photo" is the name of the form field the server expects
-      formData.append('photo', { uri: localUri, name: filename, type });
-      try {
-        const ourData = await axios.post("http://localhost:8000/predict", formData)
-        console.log(ourData)
-      } catch(error){
-        console.log(error)
-      }
-      return await fetch("http://localhost:8000/predict", {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'content-type': 'multipart/form-data',
-        },
-      });
+  useEffect(() => {
+    animation.current?.play();
+  }, []);
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    console.log(result);
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
-    
-    return (
-        <View style={styles.container}>
-      <Text style={{fontSize:24, color:"purple", width: "100%", textAlign: "center"}}>Hello World!</Text>
-      <TouchableOpacity 
-        style ={{width: 400, height: 200, backgroundColor: "violet", justifyContent: "center", alignItems: "center"}}
-        onPress={() => 
-          // takeAndUploadPhotoAsync()
-          pickImage()
-        }
+  };
+
+  const openCamera = async () => {
+    await ImagePicker.requestCameraPermissionsAsync();
+    result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 3],
+    });
+    console.log(result);
+    if (!result.cancelled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const getData = async () => {
+    try {
+      const ourData = await axios.post("http://localhost:8000/predict");
+      console.log(ourData.data.products[0]);
+      setProduct(ourData.data.products);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const predictTheImage = async () => {
+    showLoader(true);
+    let localUri = image;
+    let filename = localUri.split("/").pop();
+    let match = /\.(\w+)$/.exec(filename);
+    let type = match ? `image/${match[1]}` : `image`;
+    let formData = new FormData();
+    formData.append("photo", { uri: localUri, name: filename, type });
+    try {
+      const response = await axios.post(
+        "https://www.toptal.com/developers/postbin/1710217994009-0808786954730",
+        formData,
+      );
+      console.log("response", response.data, response.status);
+      showLoader(false);
+    } catch (error) {
+      console.log("error", error);
+      showLoader(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.background}>
+      <Text
+        style={{
+          width: "100%",
+          textAlign: "center",
+          fontSize: 25,
+          fontWeight: "bold",
+          marginTop: 20,
+        }}
       >
-        <Text style={{fontSize:24, color:"white"}}>
-            Press Me
-        </Text>
-        {image && <Image source={{ uri: image }} style={{ width: 150, height: 150,justifyContent: "center", alignItems: "center" }} />}
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style ={{width: 400, height: 100, backgroundColor: "purple", justifyContent: "center", alignItems: "center"}}
-        onPress={() => 
-          getData()
-        }
+        Write your project title here.
+      </Text>
+      <Text
+        style={{
+          width: "95%",
+          textAlign: "center",
+          fontSize: 14,
+        }}
       >
-        <Text style={{fontSize:24, color:"#eafcb6"}}>
-            Get Data
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style ={{width: 400, height: 100, backgroundColor: "green", justifyContent: "center", alignItems: "center", marginTop: 20}}
-        onPress={() => 
-            props.navigation.navigate("Details")
-        }
+        Write your project description here. Lorem ipsum dolor sit amet,
+        consectetur adipiscing elit. Pellentesque posuere, metus eu tincidunt
+        tincidunt, enim arcu condimentum libero, non viverra risus mauris eu
+        tellus. In id arcu quam. In eros turpis, maximus vitae lacus ut, rutrum
+        mattis mi. Suspendisse quis tristique risus. Nullam non gravida velit.
+        Donec metus sapien, lobortis luctus magna ut, viverra mollis ex. Mauris
+        lacus libero, iaculis vitae arcu quis, gravida efficitur risus. Sed
+        auctor risus ac pharetra tempor.
+      </Text>
+      <View
+        style={{
+          width: 300,
+          height: 300,
+          justifyContent: "center",
+          alignItems: "center",
+          alignSelf: "center",
+        }}
       >
-        <Text style={{fontSize:24, color:"black"}}>
-            Go To Next Screen
-        </Text>
-      </TouchableOpacity>
-      
-      
-      <View style = {{width: "100%", height: 500, backgroundColor:"indigo"}}>
-        {
-          product && product.length >0 && product.map((p) => {
-            return (
-              <Text key = {p.key} style = {{fontSize: 12 , color: "violet",justifyContent: "center", alignItems: "center"}}>
-                {p.description}
-              </Text>
-            ) 
-          })
-        }
+        {loader ? (
+          <LottieView
+            autoPlay
+            ref={animation}
+            style={{
+              width: 250,
+              height: 250,
+              backgroundColor: "#eee",
+            }}
+            source={require("./assets/leaf_lottie.json")}
+          />
+        ) : image ? (
+          <Image
+            source={{ uri: image }}
+            style={{
+              width: 250,
+              height: 250,
+              borderRadius: 10,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          />
+        ) : null}
       </View>
+      <View
+        style={{
+          width: "90%",
+          alignSelf: "center",
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        <TouchableOpacity
+          style={{
+            width: "45%",
+            height: 50,
+            backgroundColor: "purple",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 10,
+          }}
+          onPress={() => pickImage()}
+        >
+          <Text style={{ fontSize: 24, color: "#eafcb6" }}>Upload</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            width: "45%",
+            height: 50,
+            backgroundColor: "purple",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 10,
+          }}
+          onPress={() => openCamera()}
+        >
+          <Text style={{ fontSize: 24, color: "#eafcb6" }}>Camera</Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity
+        style={{
+          width: "90%",
+          height: 50,
+          borderRadius: 10,
+          alignSelf: "center",
+          backgroundColor: "violet",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: 20,
+        }}
+        onPress={() => predictTheImage()}
+      >
+        <Text style={{ fontSize: 24, color: "white" }}>Predict</Text>
+      </TouchableOpacity>
       <StatusBar style="auto" />
-      
-    </View>
-    );
-
+    </SafeAreaView>
+  );
 };
 const styles = StyleSheet.create({
-    background:{
-      flex: 1,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-  });
-export default Home
+  background: {
+    flex: 1,
+    backgroundColor: "#C1E1C150",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+});
+export default Home;

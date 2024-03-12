@@ -1,13 +1,20 @@
-import { StatusBar } from 'expo-status-bar';
-import React,{useState} from 'react';
-import { Camera, CameraType } from 'expo-camera';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
-import { createStackNavigator } from '@react-navigation/stack';
-import Home from './Home';
-import Details from './Details';
-import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
+import { Camera, CameraType } from "expo-camera";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
+import { createStackNavigator } from "@react-navigation/stack";
+import Home from "./Home";
+import Details from "./Details";
+import { NavigationContainer } from "@react-navigation/native";
 
 export default function App() {
   const [type, setType] = useState(CameraType.back);
@@ -33,26 +40,29 @@ export default function App() {
   };
   const getData = async () => {
     try {
-      const ourData = await axios.get("https://dummyjson.com/products")
-      console.log(ourData.data.products[0])
-      setProduct(ourData.data.products)
-    } catch(error){
-      console.log(error)
+      const ourData = await axios.get("https://dummyjson.com/products");
+      console.log(ourData.data.products[0]);
+      setProduct(ourData.data.products);
+    } catch (error) {
+      console.log(error);
     }
-  }
-  
+  };
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen
+          name="Home"
+          component={Home}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="Details" component={Details} />
-        </Stack.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
- 
   );
 }
 // export default function App() {
-  // 
+//
 //   const [type, setType] = useState(CameraType.back);
 //   const [permission, requestPermission] = Camera.useCameraPermissions();
 
@@ -78,10 +88,10 @@ export default function App() {
 // }
 
 const styles = StyleSheet.create({
-  background:{
+  background: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
