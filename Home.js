@@ -69,7 +69,7 @@ const Home = (props) => {
     formData.append("photo", { uri: localUri, name: filename, type });
     try {
       const response = await axios.post(
-        "https://www.toptal.com/developers/postbin/1710217994009-0808786954730",
+        "http://127.0.0.1:8000/predict",
         formData,
       );
       console.log("response", response.data, response.status);
