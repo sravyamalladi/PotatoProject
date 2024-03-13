@@ -12,6 +12,8 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import LottieView from "lottie-react-native";
+import { manipulateAsync } from "expo-image-manipulator";
+
 
 const Home = (props) => {
   const [image, setImage] = useState(null);
@@ -30,6 +32,7 @@ const Home = (props) => {
       aspect: [4, 3],
       quality: 1,
     });
+   
     console.log(result);
     if (!result.canceled) {
       setImage(result.assets[0].uri);
@@ -66,16 +69,26 @@ const Home = (props) => {
     let match = /\.(\w+)$/.exec(filename);
     let type = match ? `image/${match[1]}` : `image`;
     let formData = new FormData();
-    formData.append("photo", { uri: localUri, name: filename, type });
+    const manipResult = await manipulateAsync(image, [
+      { crop: { height: 256, width: 256, originX: 0, originY: 0 } },
+    ]);
+    formData.append("file", {
+      uri: manipResult.uri,
+      name: "image.jpg",
+      type: "image/jpeg",
+    });
     try {
       const response = await axios.post(
-        "https://c46b-24-5-207-148.ngrok-free.app/predict",
+        "https://ac3a-24-5-207-148.ngrok-free.app/predict",
         formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
-      // const response = await axios.get(
-      //   "https://4e06-24-5-207-148.ngrok-free.app/ping",
-      // );
-      console.log("response", response.data, response.status);
+      console.log("response", response.data);
+      props.navigation.navigate("Details", {data: response.data})
       showLoader(false);
     } catch (error) {
       console.log("error", error);

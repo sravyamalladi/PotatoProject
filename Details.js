@@ -4,17 +4,8 @@ import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-n
 const Details = (props) => {
     return (
         <View style={styles.container}>
-            <Text>This is a new Screen</Text>
-            <TouchableOpacity style = {{backgroundColor: "blue", width: 400, height: 200, justifyContent: "center", alignItems:"center" }}
-                onPress={()=>{
-                    props.navigation.goBack()
-                }
-            }
-            >
-                <Text style = {{color: "black", fontSize: 24, textAlign: "center"}}>
-                    Go Home
-                </Text>
-            </TouchableOpacity>
+            <Text>{props.route.params.data.class}</Text>
+            <Text>{Number(props.route.params.data.confidence)*100}</Text>
     </View>
     );
 
