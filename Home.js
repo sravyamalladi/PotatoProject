@@ -69,9 +69,12 @@ const Home = (props) => {
     formData.append("photo", { uri: localUri, name: filename, type });
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/predict",
+        "https://c46b-24-5-207-148.ngrok-free.app/predict",
         formData,
       );
+      // const response = await axios.get(
+      //   "https://4e06-24-5-207-148.ngrok-free.app/ping",
+      // );
       console.log("response", response.data, response.status);
       showLoader(false);
     } catch (error) {
